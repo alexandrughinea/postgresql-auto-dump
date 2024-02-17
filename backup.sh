@@ -78,7 +78,7 @@ fi
 DATE=$(date +"%Y-%m-%d_%H-%M-%S")
 
 # Backup filename with environment
-BACKUP_FILE="$BACKUP_DIR/backup_$ENVIRONMENT_$DATE.sql"
+BACKUP_FILE="$BACKUP_DIR/backup_${ENVIRONMENT}_${DATE}.sql"
 
 # Perform database backup using pg_dump
 $PG_DUMP_CMD > "$BACKUP_FILE"
