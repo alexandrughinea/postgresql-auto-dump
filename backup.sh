@@ -31,7 +31,7 @@ fi
 command -v pg_dump >/dev/null 2>&1 || { 
     echo >&2 "pg_dump not found. Aborting."
     if [ -n "$WEBHOOK_ERROR_URL" ]; then
-        curl -X POST -d "Backup failed: pg_dump not found" "$WEBHOOK_ERROR_URL"
+        curl -X POST -H "Content-Type: application/json" -d "{\"status\": \"FAILED\", \"environment\": \"$ENVIRONMENT\", \"message\": "Backup failed: pg_dump not found"}" "$WEBHOOK_ERROR_URL"
     fi
     exit 1
 }
