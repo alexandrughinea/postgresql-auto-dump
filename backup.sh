@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Prompt for environment
-read -p "Enter environment (local, staging, production): " ENVIRONMENT
+read -p "Enter environment (local, staging, production, .etc): " ENVIRONMENT
 ENVIRONMENT=$(echo "$ENVIRONMENT" | tr '[:upper:]' '[:lower:]' | tr -d '[:space:]')
 
 # Read environment variables from the .env file
@@ -10,6 +10,18 @@ ENV_FILE=".env.$ENVIRONMENT"
 if [ -f "$ENV_FILE" ]; then
     echo "Reading environment variables from $ENV_FILE"
     source "$ENV_FILE"
+    
+    # Check if PGPASSFILE is defined in the .env file
+    if [ -n "$PGPASSFILE" ]; then
+        echo "PGPASSFILE found in $ENV_FILE"
+        cat $PGPASSFILE
+        echo "\n----"
+        export PGPASSFILE
+        PG_DUMP_CMD="pg_dump"
+    else
+        echo "PGPASSFILE not found. Using other connection parameters."
+        PG_DUMP_CMD="pg_dump -U $DB_USER -h $DB_HOST -p $DB_PORT $DB_NAME"
+    fi
 else
     echo "Error: $ENV_FILE not found"
     echo "Defaulting to manual input ..."
@@ -26,7 +38,7 @@ command -v pg_dump >/dev/null 2>&1 || {
 
 # Prompt for environment, DB_USER, and DB_NAME if not provided in the .env file
 if [ -z "$ENVIRONMENT" ]; then
-    read -p "Enter environment (local, staging, production): " ENVIRONMENT
+    read -p "Enter environment (local, staging, production, .etc): " ENVIRONMENT
     ENVIRONMENT=$(echo "$ENVIRONMENT" | tr '[:upper:]' '[:lower:]' | tr -d '[:space:]')
 fi
 
@@ -68,18 +80,18 @@ DATE=$(date +"%Y-%m-%d_%H-%M-%S")
 # Backup filename with environment
 BACKUP_FILE="$BACKUP_DIR/backup_$ENVIRONMENT_$DATE.sql"
 
-# Perform database backup
-pg_dump -U "$DB_USER" -h "$DB_HOST" -p "$DB_PORT" "$DB_NAME" > "$BACKUP_FILE"
+# Perform database backup using pg_dump
+$PG_DUMP_CMD > "$BACKUP_FILE"
 
 # Check if backup was successful
 if [ $? -eq 0 ]; then
     echo "Backup completed successfully: $BACKUP_FILE"
     if [ -n "$WEBHOOK_SUCCESS_URL" ]; then
-        curl -X POST -d "Backup completed successfully: $BACKUP_FILE" "$WEBHOOK_SUCCESS_URL"
+        curl -X POST -H "Content-Type: application/json" -d "{\"status\": \"SUCCESS\", \"environment\": \"$ENVIRONMENT\"}" "$WEBHOOK_SUCCESS_URL"
     fi
 else
     echo "Backup failed"
     if [ -n "$WEBHOOK_ERROR_URL" ]; then
-        curl -X POST -d "Backup failed" "$WEBHOOK_ERROR_URL"
+        curl -X POST -H "Content-Type: application/json" -d "{\"status\": \"FAILED\", \"environment\": \"$ENVIRONMENT\"}" "$WEBHOOK_ERROR_URL"
     fi
 fi
