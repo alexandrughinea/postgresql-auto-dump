@@ -1,5 +1,9 @@
 #!/bin/bash
 
+# Prompt for environment
+read -p "Enter environment (local, staging, production): " ENVIRONMENT
+ENVIRONMENT=$(echo "$ENVIRONMENT" | tr '[:upper:]' '[:lower:]' | tr -d '[:space:]')
+
 # Read environment variables from the .env file
 ENV_FILE=".env.$ENVIRONMENT"
 
