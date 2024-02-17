@@ -8,7 +8,7 @@ if [ -f "$ENV_FILE" ]; then
     source "$ENV_FILE"
 else
     echo "Error: $ENV_FILE not found"
-    exit 1
+    echo "Defaulting to manual input ..."
 fi
 
 # Check if pg_dump exists
@@ -36,11 +36,6 @@ if [ -z "$DB_PORT" ]; then
     DB_PORT=$(echo "$DB_PORT" | tr -d '[:space:]')
 fi
 
-if [ -z "$DB_NAME" ]; then
-    read -p "Enter database port: " DB_NAME
-    DB_NAME=$(echo "$DB_NAME" | tr -d '[:space:]')
-fi
-
 if [ -z "$DB_USER" ]; then
     read -p "Enter database user: " DB_USER
     DB_USER=$(echo "$DB_USER" | tr -d '[:space:]')
@@ -55,6 +50,12 @@ fi
 if [ -z "$BACKUP_DIR" ]; then
     read -p "Enter backup directory: " BACKUP_DIR
     BACKUP_DIR=$(echo "$BACKUP_DIR" | tr -d '[:space:]')
+fi
+
+# Create backup directory if it doesn't exist
+if [ ! -d "$BACKUP_DIR" ]; then
+    mkdir -p "$BACKUP_DIR"
+    echo "Backup directory created: $BACKUP_DIR"
 fi
 
 # Date stamp
