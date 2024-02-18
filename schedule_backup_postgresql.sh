@@ -3,8 +3,10 @@
 # Function to add a cron job
 add_cron_job() {
     # Prompt for the environment
-    read -p "Enter environment (local, staging, production): " ENVIRONMENT
+    read -p "Enter environment (local, staging, production, .etc): " ENVIRONMENT
     ENV_FILE=".env.$ENVIRONMENT"
+
+    export $ENVIRONMENT
 
     # Check if the environment file exists
     if [ -f "$ENV_FILE" ]; then
@@ -18,8 +20,8 @@ add_cron_job() {
     fi
 
     # Prompt for the path to the backup script
-    read -p "Enter the path to the backup script (default: backup.sh): " BACKUP_SCRIPT_PATH
-    BACKUP_SCRIPT_PATH=${BACKUP_SCRIPT_PATH:-backup.sh}
+    read -p "Enter the path to the backup script (default: backup_posgresql.sh): " BACKUP_SCRIPT_PATH
+    BACKUP_SCRIPT_PATH=${BACKUP_SCRIPT_PATH:-backup_posgresql.sh}
 
     # Check if the backup script exists
     if [ ! -f "$BACKUP_SCRIPT_PATH" ]; then
@@ -36,8 +38,8 @@ add_cron_job() {
 # Function to remove a cron job
 remove_cron_job() {
     # Prompt for the path to the backup script
-    read -p "Enter the path to the backup script (default: backup.sh): " BACKUP_SCRIPT_PATH
-    BACKUP_SCRIPT_PATH=${BACKUP_SCRIPT_PATH:-backup.sh}
+    read -p "Enter the path to the backup script (default: backup_posgresql.sh): " BACKUP_SCRIPT_PATH
+    BACKUP_SCRIPT_PATH=${BACKUP_SCRIPT_PATH:-backup_posgresql.sh}
 
     # Remove the cron job associated with the backup script
     crontab -l | grep -v "$BACKUP_SCRIPT_PATH" | crontab -
